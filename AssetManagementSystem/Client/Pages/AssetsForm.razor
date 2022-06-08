@@ -1,0 +1,109 @@
+﻿@page "/asset"
+@page "/asset/{id:int}"
+@inject IAssetService AssetService
+
+<div class="container">
+
+    @if (Id == null)
+    {
+        <PageTitle>Add Asset</PageTitle>
+        <div class="row justify-content-center align-items-center">
+            <div class="col-6">
+                <br />
+                <h3>Add new asset</h3>
+                  <br />
+            </div>
+        </div>
+    }
+    else
+    {
+        <PageTitle>Edit @asset.Name</PageTitle>
+         <div class="row justify-content-center align-items-center">
+            <div class="col-6">
+                <br />
+                <h3>Edit @asset.Name @asset.Employee.FirstName @asset.Employee.LastName</h3>
+            </div>
+        </div>
+    }
+     <div class="row justify-content-center">
+        <div class="col-6">
+            <EditForm Model="asset" OnSubmit="HandleSubmit">
+                <div>
+                    <label for="Name">Name</label>
+                    <InputText id="Name" @bind-Value="asset.Name" class="form-control"></InputText>
+                    <ValidationMessage For="@(() => asset.Name)" />
+                </div>
+                <div>
+                    <label for="Description">Description</label>
+                    <InputText id="Description" @bind-Value="asset.Description" class="form-control"></InputText>
+                     <ValidationMessage For="@(() => asset.Description)"/>
+                </div>
+                <div>
+                    <label for="SerialNumber">Serial Number</label>
+                    <InputText id="SerialNumber" @bind-Value="asset.SerialNumber" class="form-control"></InputText>
+                     <ValidationMessage For="@(() => asset.SerialNumber)"/>
+                </div>
+                <div>
+                    <label>Status</label>
+                    <InputSelect @bind-Value="@asset.Status" class="form-select">
+                        @foreach (var status in Enum.GetValues(typeof(AssetStatus)))
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                </div>
+                @if (asset.Status == AssetStatus.InPossesion)
+                {
+                    <div>
+                        <label>Assign To:</label>
+                        <InputSelect @bind-Value="asset.Status" class="form-select"> 
+                            @foreach (var employee in AssetService.Employees)
+                            {
+                                <option value="@employee.Id">@employee.FirstName @employee.LastName @employee.IDNP</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
+                <br />
+                    <button class="btn btn-secondary" type="submit">@btnText</button>
+                    <button class="btn btn-danger" type="button" @onclick="DeleteEmployee" >Delete Employee</button>
+                <br />
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    string btnText = string.Empty;
+
+    Asset asset = new Asset { Employee = new Employee() };
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Save New Asset" : "Update Asset";
+        await AssetService.GetEmployees();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if(Id == null){
+            asset.Employee = AssetService.Employees[0];
+            asset.EmployeeId = asset.Employee.Id;
+        }
+        else asset = await AssetService.GetAssetById((int)Id);
+    }
+
+    async Task HandleSubmit()
+    {
+        if(Id == null) await AssetService.CreateAsset(asset);
+        else await AssetService.UpdateAsset(asset);
+    }
+
+    async Task DeleteEmployee()
+    {
+        await AssetService.DeleteAsset(asset.Id);
+    }
+}

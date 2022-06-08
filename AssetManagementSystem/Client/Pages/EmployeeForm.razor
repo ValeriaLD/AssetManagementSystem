@@ -1,0 +1,98 @@
+﻿@page "/employee"
+@page "/employee/{id:int}"
+@inject IEmployeeService EmployeeService
+
+<div class="container">
+
+    @if (Id == null)
+    {
+        <PageTitle>Add Employee</PageTitle>
+        <div class="row justify-content-center align-items-center">
+            <div class="col-6">
+                <br />
+                <h3>Add new employee</h3>
+                  <br />
+            </div>
+        </div>
+    }
+    else
+    {
+        <PageTitle>Edit @employee.FirstName</PageTitle>
+         <div class="row justify-content-center align-items-center">
+            <div class="col-6">
+                <br />
+                <h3>Edit @employee.FirstName @employee.LastName</h3>
+            </div>
+        </div>
+    }
+     <div class="row justify-content-center">
+        <div class="col-6">
+            <EditForm Model="employee" OnSubmit="HandleSubmit">
+                <div>
+                    <label for="IDNP">IDNP</label>
+                    <InputText id="IDNP" @bind-Value="employee.IDNP" class="form-control"></InputText>
+                    <ValidationMessage For="@(() => employee.IDNP)" />
+                </div>
+
+                <div>
+                    <label for="FirstName">FirstName</label>
+                    <InputText id="FirstName" @bind-Value="employee.FirstName" class="form-control"></InputText>
+                     <ValidationMessage For="@(() => employee.FirstName)"/>
+                </div>
+                <div>
+                    <label for="LastName">LastName</label>
+                    <InputText id="LastName" @bind-Value="employee.LastName" class="form-control"></InputText>
+                    <ValidationMessage For="@(() => employee.LastName)" />
+                </div>
+                <div>
+                    <label for="Email">Email</label>
+                    <InputText id="Email" @bind-Value="employee.Email" class="form-control" typeof="email"></InputText>
+                    <ValidationMessage For="@(() => employee.Email)" />
+                </div>
+                <div>
+                    <label for="PersonalPhone">PersonalPhone</label>
+                    <InputText id="PersonalPhone" @bind-Value="employee.PersonalPhone" class="form-control"></InputText>
+                    <ValidationMessage For="@(() => employee.PersonalPhone)" />
+                </div>
+                <br />
+                    <button class="btn btn-secondary" type="submit">@btnText</button>
+                    <button class="btn btn-danger" type="button" @onclick="DeleteEmployee" >Delete Employee</button>
+                <br />
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    string btnText = string.Empty;
+
+    Employee employee = new Employee { };
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Save New Employee" : "Update Employee";
+        await EmployeeService.GetEmployees();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if(Id == null){
+
+        }
+        else employee = await EmployeeService.GetEmployeeById((int)Id);
+    }
+
+    async Task HandleSubmit()
+    {
+        if(Id == null) await EmployeeService.CreateEmployee(employee);
+        else await EmployeeService.UpdateEmployee(employee);
+    }
+
+    async Task DeleteEmployee()
+    {
+        await EmployeeService.DeleteEmployee(employee.Id);
+    }
+}

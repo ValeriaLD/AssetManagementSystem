@@ -1,0 +1,77 @@
+﻿@page "/employees"
+@attribute [Authorize(Roles = "Manager, Admin")]
+@inject IEmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Employees</PageTitle>
+<div class="container">
+	<h3 class="col-12">Employees Page</h3>
+		<div class="row justify-content-center">
+				<div class="col-12">  
+				<div class="table-responsive">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>IDNP</th>
+								<th>FirstName</th>
+								<th>LastName</th>
+								<th>Email</th>
+								<th>PersonalPhone</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+						@if (EmployeeService.Employees == null)
+						{
+							<tr>
+								<td colspan=5>
+									Information is loading...
+								</td>
+							</tr>
+						}
+						else
+						{
+							@foreach (var employee in EmployeeService.Employees)
+							{
+								<tr>
+									<td>@employee.IDNP</td>
+									<td>@employee.FirstName</td>
+									<td>@employee.LastName</td>
+									<td>@employee.Email</td>
+									<td>@employee.PersonalPhone</td>
+									<td>
+									<AuthorizeView Roles="Manager">
+										<Authorized>
+											<button class="btn btn-primary" @onclick="(() => ShowEmployee(employee.Id))">Edit</button>
+										</Authorized>
+									</AuthorizeView>
+									</td>
+								</tr>
+							}
+						}
+						</tbody>
+					</table>
+					<AuthorizeView Roles="Manager">
+						<Authorized>
+							<button class="btn btn-primary" @onclick="AddEmployee">Create Employee</button>
+						</Authorized>
+					</AuthorizeView>
+				</div>
+			</div>
+		</div>
+</div>
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		await EmployeeService.GetEmployees();
+	}
+
+	void ShowEmployee(int id){
+		NavigationManager.NavigateTo($"employee/{id}");
+	}
+
+	void AddEmployee(){
+		NavigationManager.NavigateTo("/employee");
+	}
+}

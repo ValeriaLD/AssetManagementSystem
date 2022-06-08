@@ -1,0 +1,84 @@
+﻿@page "/assets"
+@attribute [Authorize(Roles = "Manager, Admin")]
+@inject IAssetService AssetService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Assets</PageTitle>
+<div class="container">
+	<h3 class="col-12">Assets Page</h3>
+		<div class="row justify-content-center">
+				<div class="col-12">  
+				<div class="table-responsive">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Serial Number</th>
+								<th>Description</th>
+								<th>Assigned to</th>
+								<th>Status</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+						@if(AssetService.Assets == null)
+						{
+							<tr>
+								<td colspan=5>
+									Information is loading...
+								</td>
+							</tr>
+						}
+						else
+						{
+							@foreach (var asset in AssetService.Assets)
+							{
+								<tr>
+									<td>@asset.Name</td>
+									<td>@asset.SerialNumber</td>
+									<td>@asset.Description</td>
+									@if (asset.Status == AssetStatus.InPossesion)
+                                    {
+										<td>@asset.Employee.FirstName @asset.Employee.LastName @asset.Employee.IDNP</td>
+									}
+									else
+									{
+										<td>Not Assigned</td>
+									}
+									<td>@asset.Status</td>
+									<td>
+									<AuthorizeView Roles="Manager">
+										<Authorized>
+											<button class="btn btn-primary" @onclick="(() => ShowAsset(asset.Id))">Edit</button>
+										</Authorized>
+									</AuthorizeView>
+									</td>
+								</tr>
+							}
+						}
+						</tbody>
+					</table>
+					<AuthorizeView Roles="Manager">
+						<Authorized>
+							<button class="btn btn-primary" @onclick="AddAsset">Add Asset</button>
+						</Authorized>
+					</AuthorizeView>
+				</div>
+			</div>
+		</div>
+</div>
+
+@code {
+protected override async Task OnInitializedAsync()
+	{
+		await AssetService.GetAssets();
+	}
+
+	void ShowAsset(int id){
+		NavigationManager.NavigateTo($"asset/{id}");
+	}
+
+	void AddAsset(){
+		NavigationManager.NavigateTo("/asset");
+	}
+}
